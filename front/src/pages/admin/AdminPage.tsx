@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import LoginForm from '../components/admin/LoginForm';
-import { AuthProvider } from '../context/AuthContext';
-import BackgroundGrid from '../components/admin/BackgroundGrid';
+import LoginForm from '../../components/admin/LoginForm';
+import { AuthProvider } from '../../context/AuthContext';
+import BackgroundGrid from '../../components/admin/BackgroundGrid';
 
 export default function AdminPage() {
 	const [showLogin, setShowLogin] = useState(false);
@@ -13,7 +13,7 @@ export default function AdminPage() {
 				{!showLogin ? (
 					<div className="text-center z-10">
 						<h1 className="text-9xl font-extrabold mb-20 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500 cyberpunk-glitch">
-							Админ-панель
+							Мисис EDITION
 						</h1>
 						<button
 							onClick={() => setShowLogin(true)}
