@@ -40,10 +40,10 @@ function App() {
 
 	return (
 		<div>
-			<audio id="background-audio" hidden controls loop>
+			{/* <audio id="background-audio" hidden controls loop>
 				<source src="/city.mp3" type="audio/mpeg" />
 				Аудиоплеер не поддерживается.
-			</audio>
+			</audio> */}
 			<BackgroundGrid />
 
 			<Routes>

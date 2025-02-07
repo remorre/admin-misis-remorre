@@ -7,8 +7,8 @@ interface MeetupStatsProps {
 
 export default function MeetupStats({ meetups, onClose }: MeetupStatsProps) {
 	const totalMeetups = meetups.length;
-	const activeMeetups = meetups.filter(m => !m.isArchived).length;
-	const totalAttendees = meetups.reduce((sum, m) => sum + m.attendees, 0);
+	const activeMeetups = meetups.filter(m => !m.is_archive).length;
+	const totalAttendees = meetups.reduce((sum, m) => sum + m.users.length, 0);
 	const averageAttendees =
 		totalMeetups > 0 ? Math.round(totalAttendees / totalMeetups) : 0;
 

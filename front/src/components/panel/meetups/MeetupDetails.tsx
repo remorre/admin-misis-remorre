@@ -1,30 +1,142 @@
-import { useState } from 'react';
-import type { Meetup } from '../../../pages/panel/MeetupsPage.tsx';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+'use client';
+
+import { useState, useEffect } from 'react';
 import MeetupForm from './MeetupForm';
+import type { Meetup } from '../../../pages/panel/MeetupsPage.tsx';
 
 interface MeetupDetailsProps {
-	meetup: Meetup;
+	meetupId: number;
 	onUpdate: (meetup: Meetup) => void;
-	onArchive: (id: number) => void;
+	onDelete: (id: number) => void;
 	onGenerateQR: () => void;
 	onGenerateRaffle: () => void;
+	authToken: string;
 }
 
 export default function MeetupDetails({
-	meetup,
+	meetupId,
 	onUpdate,
-	onArchive,
+	onDelete,
+	onGenerateQR,
+	onGenerateRaffle,
+	authToken,
 }: MeetupDetailsProps) {
+	const [meetup, setMeetup] = useState<Meetup | null>(null);
 	const [isEditing, setIsEditing] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchMeetupDetails = async () => {
+			setIsLoading(true);
+			setError(null);
+			try {
+				const response = await fetch(
+					`https://regami.ru/backend/meetup/${meetupId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${authToken}`,
+							accept: 'application/json',
+						},
+					},
+				);
+
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+
+				const data: Meetup = await response.json();
+				setMeetup(data);
+			} catch (err) {
+				console.error('Error fetching meetup details:', err);
+				setError('Failed to fetch meetup details. Please try again.');
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchMeetupDetails();
+	}, [meetupId, authToken]);
+
+	const handleUpdate = async (updatedData: Partial<Meetup>) => {
+		if (!meetup) return;
+
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/meetup/${meetupId}`,
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${authToken}`,
+					},
+					body: JSON.stringify(updatedData),
+				},
+			);
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const updatedMeetup: Meetup = await response.json();
+			setMeetup(updatedMeetup);
+			onUpdate(updatedMeetup);
+			setIsEditing(false);
+		} catch (err) {
+			console.error('Error updating meetup:', err);
+			setError('Failed to update meetup. Please try again.');
+		}
+	};
+
+	const handleDelete = async () => {
+		if (!meetup) return;
+
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/meetup/${meetupId}`,
+				{
+					method: 'DELETE',
+					headers: {
+						Authorization: `Bearer ${authToken}`,
+					},
+				},
+			);
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			onDelete(meetupId);
+		} catch (err) {
+			console.error('Error deleting meetup:', err);
+			setError('Failed to delete meetup. Please try again.');
+		}
+	};
+
+	if (isLoading) {
+		return (
+			<div className="text-center text-white text-2xl">Loading...</div>
+		);
+	}
+
+	if (error) {
+		return <div className="text-center text-red-500 text-2xl">{error}</div>;
+	}
+
+	if (!meetup) {
+		return (
+			<div className="text-center text-white text-2xl">
+				Meetup not found
+			</div>
+		);
+	}
 
 	if (isEditing) {
 		return (
 			<MeetupForm
 				initialData={meetup}
-				onSubmit={updatedData => {
-					onUpdate({ ...meetup, ...updatedData });
-					setIsEditing(false);
-				}}
+				onSubmit={handleUpdate}
 				onCancel={() => setIsEditing(false)}
 			/>
 		);
@@ -35,6 +147,11 @@ export default function MeetupDetails({
 			<h2 className="text-3xl font-bold mb-6 cyberpunk-glitch">
 				{meetup.title}
 			</h2>
+			<img
+				src={meetup.banner_link || '/placeholder.svg'}
+				alt={meetup.title}
+				className="w-full h-48 object-cover rounded-lg mb-4"
+			/>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Дата:</span>{' '}
 				{new Date(meetup.date).toLocaleDateString('ru-RU', {
@@ -44,8 +161,8 @@ export default function MeetupDetails({
 				})}
 			</p>
 			<p className="text-xl">
-				<span className="font-bold text-neon-blue">Место:</span>{' '}
-				{meetup.location}
+				<span className="font-bold text-neon-blue">Расписание:</span>{' '}
+				{meetup.schedule}
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Описание:</span>{' '}
@@ -53,11 +170,17 @@ export default function MeetupDetails({
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Участников:</span>{' '}
-				{meetup.attendees}
+				{meetup.users.length}
+			</p>
+			<p className="text-xl">
+				<span className="font-bold text-neon-blue">
+					Награда за посещение:
+				</span>{' '}
+				{meetup.reward_for_visit}
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Статус:</span>{' '}
-				{meetup.isArchived ? 'Архивирован' : 'Активен'}
+				{meetup.is_archive ? 'Архивирован' : 'Активен'}
 			</p>
 			<div className="flex flex-wrap justify-end space-x-4 space-y-2">
 				<button
@@ -66,14 +189,24 @@ export default function MeetupDetails({
 				>
 					Редактировать
 				</button>
-				{!meetup.isArchived && (
-					<button
-						onClick={() => onArchive(meetup.id)}
-						className="cyberpunk-button bg-red-600 text-white px-6 py-2 text-xl hover:bg-red-500 transition duration-300"
-					>
-						Архивировать
-					</button>
-				)}
+				<button
+					onClick={handleDelete}
+					className="cyberpunk-button bg-red-600 text-white px-6 py-2 text-xl hover:bg-red-500 transition duration-300"
+				>
+					Удалить
+				</button>
+				{/* <button
+					onClick={onGenerateQR}
+					className="cyberpunk-button bg-purple-600 text-white px-6 py-2 text-xl hover:bg-purple-500 transition duration-300"
+				>
+					Генерировать QR
+				</button>
+				<button
+					onClick={onGenerateRaffle}
+					className="cyberpunk-button bg-green-600 text-white px-6 py-2 text-xl hover:bg-green-500 transition duration-300"
+				>
+					Провести розыгрыш
+				</button> */}
 			</div>
 		</div>
 	);

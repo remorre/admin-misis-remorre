@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import type { Meetup } from '../../../pages/panel/MeetupsPage.tsx';
 
@@ -13,7 +15,8 @@ export default function RaffleGenerator({
 	const [winner, setWinner] = useState<number | null>(null);
 
 	const generateWinner = () => {
-		const randomWinner = Math.floor(Math.random() * meetup.attendees) + 1;
+		const randomWinner =
+			Math.floor(Math.random() * meetup.users.length) + 1;
 		setWinner(randomWinner);
 	};
 
@@ -23,7 +26,9 @@ export default function RaffleGenerator({
 				Розыгрыш для митапа
 			</h2>
 			<p className="text-xl">Розыгрыш для митапа: {meetup.title}</p>
-			<p className="text-xl">Количество участников: {meetup.attendees}</p>
+			<p className="text-xl">
+				Количество участников: {meetup.users.length}
+			</p>
 			{winner === null ? (
 				<button
 					onClick={generateWinner}
