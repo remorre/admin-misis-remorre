@@ -1,27 +1,36 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+'use client';
+
 import type React from 'react';
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext.tsx';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginForm() {
 	const [isLogin, setIsLogin] = useState(true);
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [name, setName] = useState('');
+	const [error, setError] = useState('');
 	const { login, register } = useAuth();
+	const navigate = useNavigate();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (isLogin) {
-			await login(email, password);
-		} else {
-			await register(email, password);
+		setError('');
+		try {
+			if (isLogin) {
+				await login(email, password);
+			} else {
+				await register(email, password, name);
+			}
+			navigate('/panel');
+		} catch (error) {
+			if (error instanceof Error) {
+				setError(error.message);
+			} else {
+				setError('An unexpected error occurred. Please try again.');
+			}
 		}
-	};
-
-	const navigate = useNavigate();
-
-	const handleClick = () => {
-		navigate('/panel');
 	};
 
 	return (
@@ -29,6 +38,7 @@ export default function LoginForm() {
 			<h2 className="text-5xl font-bold mb-8 text-center text-white cyberpunk-glitch">
 				{isLogin ? 'Вход' : 'Регистрация'}
 			</h2>
+			{error && <p className="text-red-500 mb-4">{error}</p>}
 			<form onSubmit={handleSubmit} className="space-y-6">
 				<div>
 					<label
@@ -44,8 +54,28 @@ export default function LoginForm() {
 						value={email}
 						onChange={e => setEmail(e.target.value)}
 						className="w-full p-3 bg-gray-900 border border-neon-blue text-white focus:outline-none focus:ring-1 focus:ring-neon-blue transition duration-200 cyberpunk-input"
+						required
 					/>
 				</div>
+				{!isLogin && (
+					<div>
+						<label
+							htmlFor="name"
+							className="block text-sm font-medium text-gray-300 mb-1"
+						>
+							Имя
+						</label>
+						<input
+							id="name"
+							type="text"
+							placeholder="Ваше имя"
+							value={name}
+							onChange={e => setName(e.target.value)}
+							className="w-full p-3 bg-gray-900 border border-neon-blue text-white focus:outline-none focus:ring-1 focus:ring-neon-blue transition duration-200 cyberpunk-input"
+							required
+						/>
+					</div>
+				)}
 				<div>
 					<label
 						htmlFor="password"
@@ -60,11 +90,11 @@ export default function LoginForm() {
 						value={password}
 						onChange={e => setPassword(e.target.value)}
 						className="w-full p-3 bg-gray-900 border border-neon-blue text-white focus:outline-none focus:ring-1 focus:ring-neon-blue transition duration-200 cyberpunk-input"
+						required
 					/>
 				</div>
 				<button
 					type="submit"
-					onClick={handleClick}
 					className="w-full bg-neon-blue hover:bg-blue-600 text-black font-bold py-3 px-4 transition duration-300 ease-in-out cyberpunk-button"
 				>
 					{isLogin ? 'Войти' : 'Зарегистрироваться'}

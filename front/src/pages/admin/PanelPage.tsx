@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import type { IconType } from 'react-icons';
 import {
 	FaCog,
@@ -13,7 +13,9 @@ import {
 	FaUserCircle,
 	FaLaptopCode,
 	FaBuilding,
+	FaSignOutAlt,
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 interface MenuItem {
 	name: string;
@@ -41,6 +43,13 @@ export default function PanelPage() {
 	const location = useLocation();
 	const [activeItem, setActiveItem] = useState(location.pathname);
 	const [isExpanded, setIsExpanded] = useState(false);
+	const { logout } = useAuth();
+	const navigate = useNavigate();
+
+	const handleLogout = () => {
+		logout();
+		navigate('/');
+	};
 
 	return (
 		<div className="min-h-screen bg-black text-white flex relative overflow-hidden">
@@ -90,6 +99,23 @@ export default function PanelPage() {
 						</Link>
 					))}
 				</div>
+				<button
+					onClick={handleLogout}
+					className={`cyberpunk-menu-item flex items-center p-3 text-lg font-bold transition duration-300 ease-in-out hover:bg-gray-800`}
+				>
+					<FaSignOutAlt
+						className={`text-2xl ${
+							isExpanded ? 'mr-3' : 'mx-auto'
+						}`}
+					/>
+					<span
+						className={`cyberpunk-text transition-opacity duration-300 ${
+							isExpanded ? 'opacity-100' : 'opacity-0 w-0'
+						}`}
+					>
+						Выход
+					</span>
+				</button>
 			</nav>
 
 			{/* Right-side content */}

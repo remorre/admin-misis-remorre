@@ -1,10 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+'use client';
+
 import { useState, useEffect } from 'react';
-import MeetupList from '../../components/panel/meetups/MeetupList.tsx';
-import MeetupForm from '../../components/panel/meetups/MeetupForm.tsx';
-import MeetupDetails from '../../components/panel/meetups/MeetupDetails.tsx';
-import MeetupStats from '../../components/panel/meetups/MeetupStats.tsx';
-import QRCodeGenerator from '../../components/panel/meetups/QRCodeGenerator.tsx';
-import RaffleGenerator from '../../components/panel/meetups/RaffleGenerator.tsx';
+import { useAuth } from '../../context/AuthContext';
+import MeetupList from '../../components/panel/meetups/MeetupList';
+import MeetupForm from '../../components/panel/meetups/MeetupForm';
+import MeetupDetails from '../../components/panel/meetups/MeetupDetails';
+import MeetupStats from '../../components/panel/meetups/MeetupStats';
+import QRCodeGenerator from '../../components/panel/meetups/QRCodeGenerator';
+import RaffleGenerator from '../../components/panel/meetups/RaffleGenerator';
 
 interface User {
 	user_id: number;
@@ -36,18 +40,21 @@ export default function MeetupsPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	const authToken =
-		'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiZXhwaXJlIjpudWxsLCJleHAiOjE3Mzk1NDc4MDl9.MXCcaiZp7zlw0EDDr3VpHdEVhSNHqFgqVffOnIdWKEw';
+	const { token } = useAuth();
 
 	useEffect(() => {
-		fetchMeetups();
-	}, []);
+		if (token) {
+			fetchMeetups();
+		}
+	}, [token]);
 
 	const fetchMeetups = async () => {
+		if (!token) return;
+
 		try {
 			const response = await fetch('https://regami.ru/backend/meetup', {
 				headers: {
-					Authorization: `Bearer ${authToken}`,
+					Authorization: `Bearer ${token}`,
 					accept: 'application/json',
 				},
 			});
@@ -57,12 +64,10 @@ export default function MeetupsPage() {
 			}
 
 			const data: Meetup[] = await response.json();
-
 			setMeetups(data);
 			setIsLoading(false);
 		} catch (err) {
 			console.error('Error fetching meetups:', err);
-			console.log('Server error response:', err);
 			setError('Failed to fetch meetups. Please try again later.');
 			setIsLoading(false);
 		}
@@ -71,12 +76,14 @@ export default function MeetupsPage() {
 	const handleCreateMeetup = async (
 		newMeetup: Omit<Meetup, 'id' | 'is_archive' | 'users'>,
 	) => {
+		if (!token) return;
+
 		try {
 			const response = await fetch('https://regami.ru/backend/meetup', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${authToken}`,
+					'Authorization': `Bearer ${token}`,
 				},
 				body: JSON.stringify([newMeetup]),
 			});
@@ -124,12 +131,12 @@ export default function MeetupsPage() {
 
 	return (
 		<div className="min-h-screen text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-			<div className="z-10 w-full max-w-7xl">
+			<div className="z-10 w-full max-w-6xl">
 				<h1 className="text-6xl font-bold mb-12 text-center cyberpunk-glitch">
 					Митапы
 				</h1>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-					<div className="space-y-6">
+					<div className="space-y-8">
 						<div className="flex space-x-4">
 							<button
 								onClick={() => setIsCreating(true)}
@@ -137,12 +144,12 @@ export default function MeetupsPage() {
 							>
 								Создать митап
 							</button>
-							<button
+							{/* <button
 								onClick={() => setShowStats(true)}
-								className="flex-1 cyberpunk-button bg-neon-green text-white px-6 py-3 font-bold text-xl hover:bg-red-600 transition duration-300 transform hover:scale-105"
+								className="flex-1 cyberpunk-button bg-neon-green text-black px-6 py-3 font-bold text-xl hover:bg-green-400 transition duration-300 transform hover:scale-105"
 							>
 								Статистика
-							</button>
+							</button> */}
 						</div>
 						<MeetupList
 							meetups={meetups}
@@ -150,20 +157,20 @@ export default function MeetupsPage() {
 							selectedMeetupId={selectedMeetupId}
 						/>
 					</div>
-					<div className="cyberpunk-form bg-gray-900 p-6 border-2 border-neon-blue shadow-lg shadow-neon-blue/50 rounded-lg">
+					<div className="cyberpunk-form bg-gray-900 p-6 border-2 border-neon-blue shadow-lg shadow-neon-blue/50">
 						{isCreating ? (
 							<MeetupForm
 								onSubmit={handleCreateMeetup}
 								onCancel={() => setIsCreating(false)}
 							/>
-						) : selectedMeetupId ? (
+						) : selectedMeetupId && token ? (
 							<MeetupDetails
 								meetupId={selectedMeetupId}
 								onUpdate={handleUpdateMeetup}
 								onDelete={handleDeleteMeetup}
 								onGenerateQR={() => setShowQRCode(true)}
 								onGenerateRaffle={() => setShowRaffle(true)}
-								authToken={authToken}
+								authToken={token}
 							/>
 						) : showStats ? (
 							<MeetupStats

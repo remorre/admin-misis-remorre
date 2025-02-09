@@ -133,3 +133,13 @@ body {
 		linear-gradient(to bottom, var(--neon-blue) 1px, transparent 1px);
 	background-size: 20px 20px;
 }
+
+/* Добавьте эти стили в ваш CSS файл или в стили компонента */
+.scrollable-container {
+	scrollbar-width: none; /* Для Firefox */
+	-ms-overflow-style: none; /* Для Internet Explorer и Edge */
+}
+
+.scrollable-container::-webkit-scrollbar {
+	display: none; /* Для Chrome, Safari и Opera */
+}

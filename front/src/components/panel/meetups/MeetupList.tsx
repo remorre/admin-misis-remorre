@@ -1,6 +1,8 @@
+'use client';
+
 import type React from 'react';
 import { useState } from 'react';
-import type { Meetup } from '../../../pages/panel/MeetupsPage.tsx';
+import type { Meetup } from '../../../pages/panel/MeetupsPage';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MeetupListProps {
@@ -32,7 +34,9 @@ const MeetupListItem: React.FC<{
 		<div className="text-base text-gray-300 truncate mt-1">
 			{meetup.schedule}
 		</div>
-		<div className="text-base mt-1">Участников: {meetup.users.length}</div>
+		<div className="text-base mt-1">
+			Участников: {meetup.users ? meetup.users.length : 0}
+		</div>
 	</li>
 );
 
@@ -65,20 +69,22 @@ const CollapsibleSection: React.FC<{
 			<div
 				className={`overflow-hidden transition-all duration-500 ease-in-out ${
 					isExpanded
-						? 'max-h-[1000px] opacity-100'
+						? 'max-h-[400px] opacity-100'
 						: 'max-h-0 opacity-0'
 				}`}
 			>
-				<ul className="space-y-3 mt-4">
-					{meetups.map(meetup => (
-						<MeetupListItem
-							key={meetup.id}
-							meetup={meetup}
-							isSelected={meetup.id === selectedMeetupId}
-							onSelect={() => onSelectMeetup(meetup.id)}
-						/>
-					))}
-				</ul>
+				<div className="overflow-y-auto max-h-[400px] pr-2 scrollable-container">
+					<ul className="space-y-3 mt-4">
+						{meetups.map(meetup => (
+							<MeetupListItem
+								key={meetup.id}
+								meetup={meetup}
+								isSelected={meetup.id === selectedMeetupId}
+								onSelect={() => onSelectMeetup(meetup.id)}
+							/>
+						))}
+					</ul>
+				</div>
 			</div>
 		</div>
 	);
@@ -93,7 +99,7 @@ export default function MeetupList({
 	const archivedMeetups = meetups.filter(meetup => meetup.is_archive);
 
 	return (
-		<div className="bg-gray-900 p-5 border-2 border-neon-blue shadow-lg shadow-neon-blue/50 rounded-lg space-y-6">
+		<div className="bg-gray-900 p-5 border-2 border-neon-blue shadow-lg shadow-neon-blue/50 rounded-lg space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
 			<CollapsibleSection
 				title="Активные митапы"
 				meetups={activeMeetups}
