@@ -1,14 +1,50 @@
-import type { Course } from '../../../pages/panel/CoursesPage.tsx';
+/* eslint-disable react-hooks/exhaustive-deps */
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 
 interface CourseStatsProps {
-	courses: Course[];
 	onClose: () => void;
 }
 
-export default function CourseStats({ courses, onClose }: CourseStatsProps) {
-	const totalCourses = courses.length;
-	const activeCourses = courses.filter(c => !c.isArchived).length;
-	const archivedCourses = courses.filter(c => c.isArchived).length;
+interface CourseStatistics {
+	totalCourses: number;
+	activeCourses: number;
+	archivedCourses: number;
+}
+
+export default function CourseStats({ onClose }: CourseStatsProps) {
+	const { token } = useAuth();
+	const [stats, setStats] = useState<CourseStatistics | null>(null);
+
+	useEffect(() => {
+		fetchCourseStatistics();
+	}, []);
+
+	const fetchCourseStatistics = async () => {
+		try {
+			const response = await fetch(
+				'https://regami.ru/backend/course/course/statistic',
+				{
+					method: 'POST',
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+			if (!response.ok)
+				throw new Error('Failed to fetch course statistics');
+			const data = await response.json();
+			setStats(data);
+		} catch (error) {
+			console.error('Error fetching course statistics:', error);
+		}
+	};
+
+	if (!stats) {
+		return <div>Loading statistics...</div>;
+	}
 
 	return (
 		<div className="space-y-6">
@@ -17,19 +53,19 @@ export default function CourseStats({ courses, onClose }: CourseStatsProps) {
 			</h2>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Всего курсов:</span>{' '}
-				{totalCourses}
+				{stats.totalCourses}
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">
 					Активных курсов:
 				</span>{' '}
-				{activeCourses}
+				{stats.activeCourses}
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">
 					Архивированных курсов:
 				</span>{' '}
-				{archivedCourses}
+				{stats.archivedCourses}
 			</p>
 			<div className="flex justify-end">
 				<button

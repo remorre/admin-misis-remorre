@@ -1,8 +1,10 @@
+'use client';
+
 import type React from 'react';
 import { useState } from 'react';
-import type { Lesson } from '../../../pages/panel/CoursesPage.tsx';
+import type { Lesson } from '../../../pages/panel/CoursesPage';
 
-type LessonFormData = Omit<Lesson, 'id' | 'isArchived'>;
+type LessonFormData = Omit<Lesson, 'id' | 'is_archive'>;
 
 interface LessonFormProps {
 	courseId: number;
@@ -18,7 +20,7 @@ export default function LessonForm({
 	initialData = {},
 }: LessonFormProps) {
 	const [formData, setFormData] = useState<LessonFormData>({
-		courseId,
+		course_id: courseId,
 		title: initialData.title || '',
 		description: initialData.description || '',
 		date: initialData.date || '',

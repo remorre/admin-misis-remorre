@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import type { Course, Lesson } from '../../../pages/panel/CoursesPage.tsx';
+import type { Course, Lesson } from '../../../pages/panel/CoursesPage';
 import CourseForm from './CourseForm';
 import LessonList from './LessonList';
 
@@ -19,7 +21,6 @@ export default function CourseDetails({
 	onSelectLesson,
 }: CourseDetailsProps) {
 	const [isEditing, setIsEditing] = useState(false);
-	const [lessons, setLessons] = useState<Lesson[]>([]); // This should be fetched from an API in a real application
 
 	if (isEditing) {
 		return (
@@ -39,23 +40,14 @@ export default function CourseDetails({
 			<h2 className="text-3xl font-bold mb-6 cyberpunk-glitch">
 				{course.title}
 			</h2>
-			<p className="text-xl">
-				<span className="font-bold text-neon-blue">Описание:</span>{' '}
-				{course.description}
-			</p>
-			<p className="text-xl">
-				<span className="font-bold text-neon-blue">Дата начала:</span>{' '}
-				{new Date(course.startDate).toLocaleDateString('ru-RU')}
-			</p>
-			<p className="text-xl">
-				<span className="font-bold text-neon-blue">
-					Дата окончания:
-				</span>{' '}
-				{new Date(course.endDate).toLocaleDateString('ru-RU')}
-			</p>
+			<img
+				src={course.banner_link || '/placeholder.svg'}
+				alt={course.title}
+				className="w-full h-40 object-cover rounded-lg"
+			/>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Статус:</span>{' '}
-				{course.isArchived ? 'Архивирован' : 'Активен'}
+				{course.is_archive ? 'Архивирован' : 'Активен'}
 			</p>
 			<div className="flex flex-wrap justify-end space-x-4 space-y-2">
 				<button
@@ -64,7 +56,7 @@ export default function CourseDetails({
 				>
 					Редактировать
 				</button>
-				{!course.isArchived && (
+				{!course.is_archive && (
 					<button
 						onClick={() => onArchive(course.id)}
 						className="cyberpunk-button bg-red-600 text-white px-6 py-2 text-xl hover:bg-red-500 transition duration-300"
@@ -79,7 +71,10 @@ export default function CourseDetails({
 					Создать занятие
 				</button>
 			</div>
-			<LessonList lessons={lessons} onSelectLesson={onSelectLesson} />
+			<LessonList
+				lessons={course.lessons}
+				onSelectLesson={onSelectLesson}
+			/>
 		</div>
 	);
 }

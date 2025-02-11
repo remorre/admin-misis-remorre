@@ -1,26 +1,26 @@
+'use client';
+
 import { useState } from 'react';
-import type { Assignment } from '../../../pages/panel/CoursesPage.tsx';
+import type { Assignment } from '../../../pages/panel/CoursesPage';
 
 interface AssignmentDetailsProps {
 	assignment: Assignment;
-	onUpdate: (assignment: Assignment) => void;
 	onArchive: (id: number) => void;
 }
 
 export default function AssignmentDetails({
 	assignment,
-	onUpdate,
 	onArchive,
 }: AssignmentDetailsProps) {
 	const [isEditing, setIsEditing] = useState(false);
 
-	// In a real application, you would fetch this data from an API
+	// В реальном приложении эти данные должны быть получены с сервера
 	const submissionCount = 15;
 	const completionRate = 75;
 
 	if (isEditing) {
-		// Implement assignment editing form here
-		return <div>Editing form (to be implemented)</div>;
+		// Здесь должна быть форма редактирования задания
+		return <div>Форма редактирования (требует реализации)</div>;
 	}
 
 	return (

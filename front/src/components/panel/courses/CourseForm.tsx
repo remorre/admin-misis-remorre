@@ -1,8 +1,10 @@
+'use client';
+
 import type React from 'react';
 import { useState } from 'react';
-import type { Course } from '../../../pages/panel/CoursesPage.tsx';
+import type { Course } from '../../../pages/panel/CoursesPage';
 
-type CourseFormData = Omit<Course, 'id' | 'isArchived'>;
+type CourseFormData = Omit<Course, 'id' | 'is_archive' | 'lessons'>;
 
 interface CourseFormProps {
 	onSubmit: (data: CourseFormData) => void;
@@ -18,8 +20,9 @@ export default function CourseForm({
 	const [formData, setFormData] = useState<CourseFormData>({
 		title: initialData.title || '',
 		description: initialData.description || '',
-		startDate: initialData.startDate || '',
-		endDate: initialData.endDate || '',
+		banner_link: initialData.banner_link || '',
+		start_date: initialData.start_date || '',
+		end_date: initialData.end_date || '',
 	});
 
 	const handleChange = (
@@ -74,16 +77,16 @@ export default function CourseForm({
 			</div>
 			<div>
 				<label
-					htmlFor="startDate"
+					htmlFor="banner_link"
 					className="block text-lg font-medium text-gray-400 mb-2"
 				>
-					Дата начала
+					Ссылка на баннер
 				</label>
 				<input
-					type="date"
-					id="startDate"
-					name="startDate"
-					value={formData.startDate}
+					type="text"
+					id="banner_link"
+					name="banner_link"
+					value={formData.banner_link}
 					onChange={handleChange}
 					required
 					className="w-full cyberpunk-input bg-gray-800 border-2 border-neon-blue text-white px-4 py-2 text-xl focus:outline-none focus:ring-2 focus:ring-neon-blue"
@@ -91,16 +94,33 @@ export default function CourseForm({
 			</div>
 			<div>
 				<label
-					htmlFor="endDate"
+					htmlFor="start_date"
+					className="block text-lg font-medium text-gray-400 mb-2"
+				>
+					Дата начала
+				</label>
+				<input
+					type="date"
+					id="start_date"
+					name="start_date"
+					value={formData.start_date}
+					onChange={handleChange}
+					required
+					className="w-full cyberpunk-input bg-gray-800 border-2 border-neon-blue text-white px-4 py-2 text-xl focus:outline-none focus:ring-2 focus:ring-neon-blue"
+				/>
+			</div>
+			<div>
+				<label
+					htmlFor="end_date"
 					className="block text-lg font-medium text-gray-400 mb-2"
 				>
 					Дата окончания
 				</label>
 				<input
 					type="date"
-					id="endDate"
-					name="endDate"
-					value={formData.endDate}
+					id="end_date"
+					name="end_date"
+					value={formData.end_date}
 					onChange={handleChange}
 					required
 					className="w-full cyberpunk-input bg-gray-800 border-2 border-neon-blue text-white px-4 py-2 text-xl focus:outline-none focus:ring-2 focus:ring-neon-blue"

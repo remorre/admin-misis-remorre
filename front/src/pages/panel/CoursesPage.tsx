@@ -1,29 +1,34 @@
-import { useState } from 'react';
-import CourseList from '../../components/panel/courses/CourseList.tsx';
-import CourseForm from '../../components/panel/courses/CourseForm.tsx';
-import CourseDetails from '../../components/panel/courses/CourseDetails.tsx';
-import CourseStats from '../../components/panel/courses/CourseStats.tsx';
-import LessonForm from '../../components/panel/courses/LessonForm.tsx';
-import LessonDetails from '../../components/panel/courses/LessonDetails.tsx';
-import AssignmentDetails from '../../components/panel/courses/AssignmentDetails.tsx';
-import QRCodeGenerator from '../../components/panel/courses/QRCodeGenerator.tsx';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import CourseList from '../../components/panel/courses/CourseList';
+import CourseForm from '../../components/panel/courses/CourseForm';
+import CourseDetails from '../../components/panel/courses/CourseDetails';
+import CourseStats from '../../components/panel/courses/CourseStats';
+import LessonForm from '../../components/panel/courses/LessonForm';
+import LessonDetails from '../../components/panel/courses/LessonDetails';
+import AssignmentDetails from '../../components/panel/courses/AssignmentDetails';
+import QRCodeGenerator from '../../components/panel/courses/QRCodeGenerator';
 
 export interface Course {
 	id: number;
 	title: string;
 	description: string;
-	startDate: string;
-	endDate: string;
-	isArchived: boolean;
+	banner_link: string;
+	start_date: string;
+	end_date: string;
+	lessons: Lesson[];
+	is_archive: boolean;
 }
 
 export interface Lesson {
 	id: number;
-	courseId: number;
+	course_id: number;
 	title: string;
 	description: string;
 	date: string;
-	isArchived: boolean;
+	is_archive: boolean;
 }
 
 export interface Assignment {
@@ -35,74 +40,228 @@ export interface Assignment {
 	isArchived: boolean;
 }
 
-const initialCourses: Course[] = [
-	{
-		id: 1,
-		title: 'Введение в киберпанк',
-		description: 'Основы жанра и его влияние на современную культуру',
-		startDate: '2025-09-01',
-		endDate: '2025-12-15',
-		isArchived: false,
-	},
-	{
-		id: 2,
-		title: 'Нейроинтерфейсы будущего',
-		description:
-			'Изучение технологий прямого подключения мозга к компьютеру',
-		startDate: '2026-01-10',
-		endDate: '2026-05-30',
-		isArchived: false,
-	},
-];
-
 export default function CoursesPage() {
-	const [courses, setCourses] = useState<Course[]>(initialCourses);
+	const { token } = useAuth();
+	const [courses, setCourses] = useState<Course[]>([]);
 	const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 	const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-	const [selectedAssignment, setSelectedAssignment] =
-		useState<Assignment | null>(null);
+	const [selectedAssignment] = useState<Assignment | null>(null);
 	const [isCreatingCourse, setIsCreatingCourse] = useState(false);
 	const [isCreatingLesson, setIsCreatingLesson] = useState(false);
 	const [showStats, setShowStats] = useState(false);
 	const [showQRCode, setShowQRCode] = useState(false);
 
-	const handleCreateCourse = (
-		newCourse: Omit<Course, 'id' | 'isArchived'>,
+	useEffect(() => {
+		fetchCourses();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	const fetchCourses = async () => {
+		try {
+			const response = await fetch('https://regami.ru/backend/course', {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			if (!response.ok) throw new Error('Failed to fetch courses');
+			const data = await response.json();
+			setCourses(data);
+		} catch (error) {
+			console.error('Error fetching courses:', error);
+		}
+	};
+
+	const handleCreateCourse = async (
+		newCourse: Omit<Course, 'id' | 'is_archive' | 'lessons'>,
 	) => {
-		const course: Course = {
-			...newCourse,
-			id: courses.length + 1,
-			isArchived: false,
-		};
-		setCourses([...courses, course]);
-		setIsCreatingCourse(false);
+		try {
+			const response = await fetch('https://regami.ru/backend/course', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`,
+				},
+				body: JSON.stringify([newCourse]),
+			});
+			if (!response.ok) throw new Error('Failed to create course');
+			const createdCourses = await response.json();
+			setCourses([...courses, ...createdCourses]);
+			setIsCreatingCourse(false);
+		} catch (error) {
+			console.error('Error creating course:', error);
+		}
 	};
 
-	const handleUpdateCourse = (updatedCourse: Course) => {
-		setCourses(
-			courses.map(course =>
-				course.id === updatedCourse.id ? updatedCourse : course,
-			),
-		);
-		setSelectedCourse(updatedCourse);
+	const handleUpdateCourse = async (updatedCourse: Course) => {
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/course/${updatedCourse.id}`,
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+					body: JSON.stringify(updatedCourse),
+				},
+			);
+			if (!response.ok) throw new Error('Failed to update course');
+			await response.json();
+			setCourses(
+				courses.map(course =>
+					course.id === updatedCourse.id ? updatedCourse : course,
+				),
+			);
+			setSelectedCourse(updatedCourse);
+		} catch (error) {
+			console.error('Error updating course:', error);
+		}
 	};
 
-	const handleArchiveCourse = (courseId: number) => {
-		setCourses(
-			courses.map(course =>
-				course.id === courseId
-					? { ...course, isArchived: true }
-					: course,
-			),
-		);
-		setSelectedCourse(null);
+	const handleArchiveCourse = async (courseId: number) => {
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/course/${courseId}`,
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+					body: JSON.stringify({ is_archive: true }),
+				},
+			);
+			if (!response.ok) throw new Error('Failed to archive course');
+			await response.json();
+			setCourses(
+				courses.map(course =>
+					course.id === courseId
+						? { ...course, is_archive: true }
+						: course,
+				),
+			);
+			setSelectedCourse(null);
+		} catch (error) {
+			console.error('Error archiving course:', error);
+		}
+	};
+
+	const handleCreateLesson = async (
+		newLesson: Omit<Lesson, 'id' | 'is_archive'>,
+	) => {
+		if (!selectedCourse) return;
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/course/${selectedCourse.id}/lesson`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+					body: JSON.stringify([newLesson]),
+				},
+			);
+			if (!response.ok) throw new Error('Failed to create lesson');
+			const createdLessons = await response.json();
+			const updatedCourse = {
+				...selectedCourse,
+				lessons: [...selectedCourse.lessons, ...createdLessons],
+			};
+			setCourses(
+				courses.map(course =>
+					course.id === selectedCourse.id ? updatedCourse : course,
+				),
+			);
+			setSelectedCourse(updatedCourse);
+			setIsCreatingLesson(false);
+		} catch (error) {
+			console.error('Error creating lesson:', error);
+		}
+	};
+
+	const handleUpdateLesson = async (updatedLesson: Lesson) => {
+		if (!selectedCourse) return;
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/course/${selectedCourse.id}/lesson/${updatedLesson.id}`,
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+					body: JSON.stringify(updatedLesson),
+				},
+			);
+			if (!response.ok) throw new Error('Failed to update lesson');
+			await response.json();
+			const updatedCourse = {
+				...selectedCourse,
+				lessons: selectedCourse.lessons.map(lesson =>
+					lesson.id === updatedLesson.id ? updatedLesson : lesson,
+				),
+			};
+			setCourses(
+				courses.map(course =>
+					course.id === selectedCourse.id ? updatedCourse : course,
+				),
+			);
+			setSelectedCourse(updatedCourse);
+			setSelectedLesson(updatedLesson);
+		} catch (error) {
+			console.error('Error updating lesson:', error);
+		}
+	};
+
+	const handleArchiveLesson = async (lessonId: number) => {
+		if (!selectedCourse) return;
+		try {
+			const response = await fetch(
+				`https://regami.ru/backend/course/${selectedCourse.id}/lesson/${lessonId}`,
+				{
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${token}`,
+					},
+					body: JSON.stringify({ is_archive: true }),
+				},
+			);
+			if (!response.ok) throw new Error('Failed to archive lesson');
+			await response.json();
+			const updatedCourse = {
+				...selectedCourse,
+				lessons: selectedCourse.lessons.map(lesson =>
+					lesson.id === lessonId
+						? { ...lesson, is_archive: true }
+						: lesson,
+				),
+			};
+			setCourses(
+				courses.map(course =>
+					course.id === selectedCourse.id ? updatedCourse : course,
+				),
+			);
+			setSelectedCourse(updatedCourse);
+			setSelectedLesson(null);
+		} catch (error) {
+			console.error('Error archiving lesson:', error);
+		}
+	};
+
+	const handleSelectLesson = (lesson: Lesson) => {
+		setSelectedLesson(lesson);
+		setSelectedCourse(null); // Hide course details when a lesson is selected
 	};
 
 	return (
-		<div className="min-h-screen  text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+		<div className="min-h-screen text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 			<div className="z-10 w-full max-w-7xl">
 				<h1 className="text-6xl font-bold mb-12 text-center cyberpunk-glitch">
-					Курсы
+					<span className="cyberpunk-text" data-text="Курсы">
+						Курсы
+					</span>
 				</h1>
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					<div className="space-y-8">
@@ -126,7 +285,7 @@ export default function CoursesPage() {
 							selectedCourseId={selectedCourse?.id}
 						/>
 					</div>
-					<div className="cyberpunk-form bg-gray-900 p-6 border-2 border-neon-blue shadow-lg shadow-neon-blue/50">
+					<div className="cyberpunk-form bg-gray-900 p-6 border-2 border-neon-blue shadow-lg shadow-neon-blue/50 max-h-[80vh] overflow-y-auto scrollable-container">
 						{isCreatingCourse ? (
 							<CourseForm
 								onSubmit={handleCreateCourse}
@@ -138,41 +297,36 @@ export default function CoursesPage() {
 								onUpdate={handleUpdateCourse}
 								onArchive={handleArchiveCourse}
 								onCreateLesson={() => setIsCreatingLesson(true)}
-								onSelectLesson={setSelectedLesson}
+								onSelectLesson={handleSelectLesson}
 							/>
 						) : showStats ? (
-							<CourseStats
-								courses={courses}
-								onClose={() => setShowStats(false)}
-							/>
+							<CourseStats onClose={() => setShowStats(false)} />
 						) : selectedLesson ? (
 							<LessonDetails
 								lesson={selectedLesson}
-								onUpdate={updatedLesson => {
-									// Handle lesson update
-								}}
-								onArchive={lessonId => {
-									// Handle lesson archive
-								}}
-								onSelectAssignment={setSelectedAssignment}
+								onUpdate={handleUpdateLesson}
+								onArchive={handleArchiveLesson}
 								onGenerateQR={() => setShowQRCode(true)}
+								onBack={() => {
+									setSelectedLesson(null);
+									setSelectedCourse(
+										courses.find(
+											c =>
+												c.id ===
+												selectedLesson.course_id,
+										) || null,
+									);
+								}}
 							/>
 						) : selectedAssignment ? (
 							<AssignmentDetails
 								assignment={selectedAssignment}
-								onUpdate={updatedAssignment => {
-									// Handle assignment update
-								}}
-								onArchive={assignmentId => {
-									// Handle assignment archive
-								}}
+								onArchive={() => {}}
 							/>
 						) : isCreatingLesson ? (
 							<LessonForm
 								courseId={selectedCourse!.id}
-								onSubmit={newLesson => {
-									// Handle new lesson creation
-								}}
+								onSubmit={handleCreateLesson}
 								onCancel={() => setIsCreatingLesson(false)}
 							/>
 						) : showQRCode ? (

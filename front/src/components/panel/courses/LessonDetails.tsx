@@ -1,30 +1,30 @@
+'use client';
+
 import { useState } from 'react';
-import type { Lesson, Assignment } from '../../../pages/panel/CoursesPage.tsx';
+import type { Lesson } from '../../../pages/panel/CoursesPage';
 import LessonForm from './LessonForm';
-import AssignmentList from './AssignmentList';
 
 interface LessonDetailsProps {
 	lesson: Lesson;
 	onUpdate: (lesson: Lesson) => void;
 	onArchive: (id: number) => void;
-	onSelectAssignment: (assignment: Assignment) => void;
 	onGenerateQR: () => void;
+	onBack: () => void;
 }
 
 export default function LessonDetails({
 	lesson,
 	onUpdate,
 	onArchive,
-	onSelectAssignment,
 	onGenerateQR,
+	onBack,
 }: LessonDetailsProps) {
 	const [isEditing, setIsEditing] = useState(false);
-	const [assignments, setAssignments] = useState<Assignment[]>([]); // This should be fetched from an API in a real application
 
 	if (isEditing) {
 		return (
 			<LessonForm
-				courseId={lesson.courseId}
+				courseId={lesson.course_id}
 				initialData={lesson}
 				onSubmit={updatedData => {
 					onUpdate({ ...lesson, ...updatedData });
@@ -36,9 +36,17 @@ export default function LessonDetails({
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 animate-fadeIn">
+			<button
+				onClick={onBack}
+				className="cyberpunk-button bg-gray-700 text-white px-4 py-2 text-lg hover:bg-gray-600 transition duration-300 mb-4"
+			>
+				← Назад к курсу
+			</button>
 			<h2 className="text-3xl font-bold mb-6 cyberpunk-glitch">
-				{lesson.title}
+				<span className="cyberpunk-text" data-text={lesson.title}>
+					{lesson.title}
+				</span>
 			</h2>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Описание:</span>{' '}
@@ -50,7 +58,7 @@ export default function LessonDetails({
 			</p>
 			<p className="text-xl">
 				<span className="font-bold text-neon-blue">Статус:</span>{' '}
-				{lesson.isArchived ? 'Архивировано' : 'Активно'}
+				{lesson.is_archive ? 'Архивировано' : 'Активно'}
 			</p>
 			<div className="flex flex-wrap justify-end space-x-4 space-y-2">
 				<button
@@ -59,7 +67,7 @@ export default function LessonDetails({
 				>
 					Редактировать
 				</button>
-				{!lesson.isArchived && (
+				{!lesson.is_archive && (
 					<button
 						onClick={() => onArchive(lesson.id)}
 						className="cyberpunk-button bg-red-600 text-white px-6 py-2 text-xl hover:bg-red-500 transition duration-300"
@@ -74,10 +82,6 @@ export default function LessonDetails({
 					Генерировать QR-код
 				</button>
 			</div>
-			<AssignmentList
-				assignments={assignments}
-				onSelectAssignment={onSelectAssignment}
-			/>
 		</div>
 	);
 }

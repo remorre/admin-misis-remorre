@@ -1,4 +1,4 @@
-import type { Lesson } from '../../../pages/panel/CoursesPage.tsx';
+import type { Lesson } from '../../../pages/panel/CoursesPage';
 
 interface LessonListProps {
 	lessons: Lesson[];
@@ -32,7 +32,7 @@ export default function LessonList({
 									'ru-RU',
 								)}
 							</p>
-							{lesson.isArchived && (
+							{lesson.is_archive && (
 								<span className="ml-2 text-red-500">
 									(Архивировано)
 								</span>
