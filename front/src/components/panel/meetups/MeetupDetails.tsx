@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -195,7 +194,7 @@ export default function MeetupDetails({
 				>
 					Удалить
 				</button>
-				{/* <button
+				<button
 					onClick={onGenerateQR}
 					className="cyberpunk-button bg-purple-600 text-white px-6 py-2 text-xl hover:bg-purple-500 transition duration-300"
 				>
@@ -206,7 +205,7 @@ export default function MeetupDetails({
 					className="cyberpunk-button bg-green-600 text-white px-6 py-2 text-xl hover:bg-green-500 transition duration-300"
 				>
 					Провести розыгрыш
-				</button> */}
+				</button>
 			</div>
 		</div>
 	);

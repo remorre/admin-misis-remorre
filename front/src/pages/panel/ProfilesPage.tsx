@@ -34,8 +34,7 @@ const initialProfiles: Profile[] = [
 ];
 
 export default function ProfilesPage() {
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
+	const [profiles] = useState<Profile[]>(initialProfiles);
 	const [selectedProfile, setSelectedProfile] = useState<Profile | null>(
 		null,
 	);
